@@ -4,6 +4,7 @@ from etw import TraceEventSource, EventConsumer, EventHandler
 from etw.descriptors import image
 import exceptions
 import os
+import sys
 import numpy as np
 
 from etw.descriptors import uteventqueue
@@ -24,19 +25,26 @@ class TestConsumer(EventConsumer):
         samples.append(np.asarray((event_data.time_stamp, event_data.Priority, event_data.Duration)))
 
 
-ts = TestConsumer()
-tes = TraceEventSource([ts], True)
 
-print "open tracefile"
-tes.OpenFileSession("C:/Users/Ulrich/Documents/xperftraces/2015-20-08_17-49-25_Ulrich.etl")
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print "usage: %s <trace>.etl" % sys.argv[0]
+        exit(0)
 
-print"parsing entries ..."
-tes.Consume()
+    filename = sys.argv[1]
+    ts = TestConsumer()
+    tes = TraceEventSource([ts], True)
 
-print "average time (ms)"
-for k in sorted(ts.eventqueue_stats.keys()):
-    values = ts.eventqueue_stats[k]
-    data = np.vstack(values)
-    ed, cn, pn = k
-    print "%s:%s-%s (%d) = %0.5f" % (ed, cn, pn, len(values), data[:,2].mean())
+    print "open tracefile"
+    tes.OpenFileSession(filename)
+
+    print"parsing entries ..."
+    tes.Consume()
+
+    print "average time (ms)"
+    for k in sorted(ts.eventqueue_stats.keys()):
+        values = ts.eventqueue_stats[k]
+        data = np.vstack(values)
+        ed, cn, pn = k
+        print "%s:%s-%s (%d) = %0.5f" % (ed, cn, pn, len(values), data[:,2].mean())
 
