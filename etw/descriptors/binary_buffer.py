@@ -14,6 +14,7 @@
 # limitations under the License.
 """Helper classes for reading binary buffers."""
 import ctypes
+import win32com.client
 import pywintypes
 
 ctypes.windll.advapi32.IsValidSid.argtypes = [ctypes.c_void_p]
@@ -189,6 +190,9 @@ class BinaryBufferReader(object):
 
   def ReadUInt64(self):
     return self.Read(ctypes.c_ulonglong)
+
+  def ReadFloat(self):
+    return self.Read(ctypes.c_float)
 
   def ReadString(self):
     val = self._buffer.GetStringAt(self._offset)

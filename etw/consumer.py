@@ -292,6 +292,7 @@ class TraceEventSource(object):
       session: the _TraceLogSession on which this event occurred.
       event_trace: a POINTER(EVENT_TRACE) for the current event.
     """
+
     header = event_trace.contents.Header
     guid = str(header.Guid)
     version = header.Class.Version

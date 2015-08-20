@@ -15,8 +15,8 @@
 """A script to generate ETW event descriptors for ETW MOF events."""
 import optparse
 import os
-import pywintypes
 import win32com.client
+import pywintypes
 
 LICENSE_HEADER = """\
 #!/usr/bin/python2.6

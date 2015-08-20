@@ -74,6 +74,10 @@ def UInt64(unused_session, reader):
   return reader.ReadUInt64()
 
 
+def Float(unused_session, reader):
+  return reader.ReadFloat()
+
+
 def Pointer(session, reader):
   if session.is_64_bit_log:
     return reader.ReadUInt64()
