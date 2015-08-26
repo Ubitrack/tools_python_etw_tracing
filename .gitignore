@@ -1,2 +1,4 @@
 *.pyc
 ETW.egg-info/
+build/
+dist/
