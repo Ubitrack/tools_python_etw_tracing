@@ -31,6 +31,110 @@ class Event(object):
   DCEnd = (GUID, 4)
   Load = (GUID, 10)
   KernelBase = (GUID, 33)
+  HypercallPage = (GUID, 34)
+  LoaderLockAttempt = (GUID, 128)
+  LoaderLockAcquire = (GUID, 129)
+  LoaderLockTriedAndFailed = (GUID, 130)
+  LoaderLockWait = (GUID, 131)
+  ProcessInitDone = (GUID, 132)
+  CreateSectionBegin = (GUID, 133)
+  CreateSectionEnd = (GUID, 134)
+  MapViewBegin = (GUID, 135)
+  RelocateImageBegin = (GUID, 144)
+  RelocateImageEnd = (GUID, 145)
+  HandleOldDescsBegin = (GUID, 146)
+  HandleOldDescsEnd = (GUID, 147)
+  HandleNewDescsBegin = (GUID, 148)
+  HandleNewDescsEnd = (GUID, 149)
+  DllMainExit = (GUID, 150)
+  FindDllByName = (GUID, 160)
+  MapViewEnd = (GUID, 161)
+  LoaderLockRelease = (GUID, 162)
+  DllMainEnter = (GUID, 163)
+  LoaderError = (GUID, 164)
+  MapViewStart = (GUID, 165)
+  SnappingStart = (GUID, 166)
+  SnappingEnd = (GUID, 167)
+  LoadingStart = (GUID, 168)
+  LoadingEnd = (GUID, 169)
+  FoundKnownDll = (GUID, 170)
+  AbnormalTermination = (GUID, 171)
+  ModulePlaceHolder = (GUID, 172)
+  ReadyToInit = (GUID, 173)
+  ReadyToRun = (GUID, 174)
+  NewDllLoad = (GUID, 176)
+  NewDllLoadAsData = (GUID, 177)
+  DllSearchPathExternal = (GUID, 192)
+  DllSearchPathInternal = (GUID, 193)
+  ApiSetResolving = (GUID, 208)
+  ApiSetHosted = (GUID, 209)
+  ApiSetUnhosted = (GUID, 210)
+  ApiSetUnresolved = (GUID, 211)
+  DllSearchResults = (GUID, 212)
+  DllPathSearchResults = (GUID, 213)
+
+
+class Image_V2(event.EventCategory):
+  GUID = Event.GUID
+  VERSION = 2
+
+  class KernelImageBase(event.EventClass):
+    _event_types_ = [Event.KernelBase]
+    _fields_ = [('ImageBase', field.Pointer)]
+
+  class LoaderBasicEvent(event.EventClass):
+    _event_types_ = [Event.CreateSectionBegin,
+                     Event.CreateSectionEnd,
+                     Event.LoaderLockAcquire,
+                     Event.LoaderLockAttempt,
+                     Event.LoaderLockTriedAndFailed,
+                     Event.LoaderLockWait,
+                     Event.MapViewBegin,
+                     Event.ProcessInitDone]
+    _fields_ = []
+
+  class LoaderCodedEvent(event.EventClass):
+    _event_types_ = [Event.DllMainEnter,
+                     Event.FindDllByName,
+                     Event.LoaderError,
+                     Event.LoaderLockRelease,
+                     Event.MapViewEnd]
+    _fields_ = [('BaseAddress', field.UInt64),
+                ('ErrorOpcode', field.UInt8),
+                ('Code', field.Int8),
+                ('String', field.WString)]
+
+  class LoaderBaseEvent(event.EventClass):
+    _event_types_ = [Event.DllMainExit,
+                     Event.HandleNewDescsBegin,
+                     Event.HandleNewDescsEnd,
+                     Event.HandleOldDescsBegin,
+                     Event.HandleOldDescsEnd,
+                     Event.RelocateImageBegin,
+                     Event.RelocateImageEnd]
+    _fields_ = [('BaseAddress', field.UInt64)]
+
+  class Image_Load_V2(event.EventClass):
+    _event_types_ = [Event.DCEnd,
+                     Event.DCStart,
+                     Event.Load,
+                     Event.UnLoad]
+    _fields_ = [('ImageBase', field.Pointer),
+                ('ImageSize', field.Pointer),
+                ('ProcessId', field.UInt32),
+                ('ImageChecksum', field.UInt32),
+                ('TimeDateStamp', field.UInt32),
+                ('Reserved0', field.UInt32),
+                ('DefaultBase', field.Pointer),
+                ('Reserved1', field.UInt32),
+                ('Reserved2', field.UInt32),
+                ('Reserved3', field.UInt32),
+                ('Reserved4', field.UInt32),
+                ('FileName', field.WString)]
+
+  class HypercallPage(event.EventClass):
+    _event_types_ = [Event.HypercallPage]
+    _fields_ = [('HypercallPageVa', field.Pointer)]
 
 
 class Image_V0(event.EventCategory):
@@ -58,7 +162,7 @@ class Image_V1(event.EventCategory):
 
 class Image(event.EventCategory):
   GUID = Event.GUID
-  VERSION = 2
+  VERSION = 3
 
   class Load(event.EventClass):
     _event_types_ = [Event.DCEnd,
@@ -70,7 +174,9 @@ class Image(event.EventCategory):
                 ('ProcessId', field.UInt32),
                 ('ImageChecksum', field.UInt32),
                 ('TimeDateStamp', field.UInt32),
-                ('Reserved0', field.UInt32),
+                ('SignatureLevel', field.UInt8),
+                ('SignatureType', field.UInt8),
+                ('Reserved0', field.UInt16),
                 ('DefaultBase', field.Pointer),
                 ('Reserved1', field.UInt32),
                 ('Reserved2', field.UInt32),
@@ -78,6 +184,55 @@ class Image(event.EventCategory):
                 ('Reserved4', field.UInt32),
                 ('FileName', field.WString)]
 
-  class KernelImageBase(event.EventClass):
-    _event_types_ = [Event.KernelBase]
-    _fields_ = [('ImageBase', field.Pointer)]
+  class LoaderDllSearchResults(event.EventClass):
+    _event_types_ = [Event.DllSearchResults]
+    _fields_ = [('LdrLoadFlags', field.UInt32),
+                ('LdrSearchFlags', field.UInt32),
+                ('SearchInfo', field.UInt32),
+                ('LoadReason', field.UInt32),
+                ('FullDllName', field.WString)]
+
+  class LoaderNewDllEvent(event.EventClass):
+    _event_types_ = [Event.NewDllLoad,
+                     Event.NewDllLoadAsData]
+    _fields_ = [('NewDllBaseAddress', field.Pointer),
+                ('ParentDllBaseAddress', field.Pointer),
+                ('LoadReason', field.UInt32),
+                ('FilePath', field.WString)]
+
+  class LoaderCodedEventPath(event.EventClass):
+    _event_types_ = [Event.DllSearchPathExternal,
+                     Event.DllSearchPathInternal]
+    _fields_ = [('BaseAddress', field.UInt64),
+                ('ErrorOpcode', field.UInt8),
+                ('Code', field.Int8),
+                ('String1', field.WString),
+                ('String2', field.WString)]
+
+  class LoaderCodedEventStatus(event.EventClass):
+    _event_types_ = [Event.AbnormalTermination,
+                     Event.ApiSetHosted,
+                     Event.ApiSetResolving,
+                     Event.ApiSetUnhosted,
+                     Event.ApiSetUnresolved,
+                     Event.FoundKnownDll,
+                     Event.LoadingEnd,
+                     Event.LoadingStart,
+                     Event.MapViewStart,
+                     Event.ModulePlaceHolder,
+                     Event.ReadyToInit,
+                     Event.ReadyToRun,
+                     Event.SnappingEnd,
+                     Event.SnappingStart]
+    _fields_ = [('BaseAddress', field.UInt64),
+                ('ErrorOpcode', field.UInt8),
+                ('Code', field.Int8),
+                ('String', field.WString)]
+
+  class LoaderPathSearchResults(event.EventClass):
+    _event_types_ = [Event.DllPathSearchResults]
+    _fields_ = [('SearchInfo', field.UInt32),
+                ('Cwd', field.WString),
+                ('AppDir', field.WString),
+                ('DllDir', field.WString),
+                ('DllLoadDir', field.WString)]

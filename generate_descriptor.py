@@ -330,12 +330,20 @@ class DescriptorGenerator(object):
         return 'Sid'
       elif ext == 'SizeT':
         return 'Int32'
+      elif ext == 'GUID':
+        return 'Int64'
       elif ext == 'WmiTime':
         return 'WmiTime'
       raise ValueError('Field %s is of unhandled object type: %s' %
                        (field.Name, ext))
+    elif field.CIMType == 'GUID':
+      str_format = self._GetQualifier(field, 'format')
+      if str_format == 'w':
+        return 'WString'
+      else:
+        return 'String'
 
-    raise ValueError('Field %s is of unhandled type: %s' %
+    raise ValueError('Field %s is of unhandled type: %r' %
                      (field.Name, field.CIMType))
 
 

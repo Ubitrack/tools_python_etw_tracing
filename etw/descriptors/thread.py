@@ -32,6 +32,7 @@ class Event(object):
   DCEnd = (GUID, 4)
   CSwitch = (GUID, 36)
   CompCS = (GUID, 37)
+  SpinLock = (GUID, 41)
   SetPriority = (GUID, 48)
   SetBasePriority = (GUID, 49)
   ReadyThread = (GUID, 50)
@@ -39,17 +40,58 @@ class Event(object):
   SetIoPriority = (GUID, 52)
   ThreadAffinity = (GUID, 53)
   WorkerThread = (GUID, 57)
+  AntiStarvationBoost = (GUID, 60)
+  Thread Migration = (GUID, 61)
+  Kernel Queue Enqueue = (GUID, 62)
+  Kernel Queue Dequeue = (GUID, 63)
+  Start = (GUID, 64)
+  End = (GUID, 65)
+  AutoBoost Set Floor = (GUID, 66)
+  AutoBoost Clear Floor = (GUID, 67)
+  AutoBoost Entry Exhaustion = (GUID, 68)
+  SubProcessTag Changed = (GUID, 69)
 
 
 class Thread_V2(event.EventCategory):
   GUID = Event.GUID
   VERSION = 2
 
+  class AutoBoostClearFloor(event.EventClass):
+    _event_types_ = [Event.AutoBoost Clear Floor]
+    _fields_ = [('LockAddress', field.Pointer),
+                ('ThreadId', field.UInt32),
+                ('BoostBitmap', field.UInt32)]
+
   class WorkerThread(event.EventClass):
     _event_types_ = [Event.WorkerThread]
     _fields_ = [('TThreadId', field.UInt32),
                 ('StartTime', field.UInt64),
                 ('ThreadRoutine', field.Pointer)]
+
+  class KernelQueueEnqueue(event.EventClass):
+    _event_types_ = [Event.Kernel Queue Enqueue]
+    _fields_ = [('Entry', field.Pointer),
+                ('ThreadId', field.UInt32)]
+
+  class SubProcessTagChanged(event.EventClass):
+    _event_types_ = [Event.SubProcessTag Changed]
+    _fields_ = [('OldTag', field.UInt32),
+                ('NewTag', field.UInt32)]
+
+  class SpinLock(event.EventClass):
+    _event_types_ = [Event.SpinLock]
+    _fields_ = [('SpinLockAddress', field.Pointer),
+                ('CallerAddress', field.Pointer),
+                ('AcquireTime', field.UInt64),
+                ('ReleaseTime', field.UInt64),
+                ('WaitTimeInCycles', field.UInt32),
+                ('SpinCount', field.UInt32),
+                ('ThreadId', field.UInt32),
+                ('InterruptCount', field.UInt32),
+                ('Irql', field.UInt8),
+                ('AcquireDepth', field.UInt8),
+                ('Flag', field.UInt8),
+                ('Reserved', field.UInt8)]
 
   class CSwitch(event.EventClass):
     _event_types_ = [Event.CSwitch]
@@ -66,6 +108,30 @@ class Thread_V2(event.EventCategory):
                 ('NewThreadWaitTime', field.UInt32),
                 ('Reserved', field.UInt32)]
 
+  class ThreadMigration(event.EventClass):
+    _event_types_ = [Event.Thread Migration]
+    _fields_ = [('ThreadId', field.UInt32),
+                ('SourceProcessorIndex', field.UInt16),
+                ('TargetProcessorIndex', field.UInt16),
+                ('Priority', field.UInt8),
+                ('IdealProcessorAdjust', field.Boolean),
+                ('OldIdealProcessorIndex', field.UInt16)]
+
+  class KernelQueueDequeue(event.EventClass):
+    _event_types_ = [Event.Kernel Queue Dequeue]
+    _fields_ = [('ThreadId', field.UInt32),
+                ('EntryCount', field.UInt32),
+                ('Entries', field.Pointer)]
+
+  class AutoBoostSetFloor(event.EventClass):
+    _event_types_ = [Event.AutoBoost Set Floor]
+    _fields_ = [('Lock', field.Pointer),
+                ('ThreadId', field.UInt32),
+                ('NewCpuPriorityFloor', field.UInt8),
+                ('OldCpuPriority', field.UInt8),
+                ('IoPriorities', field.UInt8),
+                ('BoostFlags', field.UInt8)]
+
   class ThreadAffinity(event.EventClass):
     _event_types_ = [Event.ThreadAffinity]
     _fields_ = [('Affinity', field.Pointer),
@@ -73,9 +139,19 @@ class Thread_V2(event.EventCategory):
                 ('Group', field.UInt16),
                 ('Reserved', field.UInt16)]
 
+  class WorkerThread_StartStop_V2(event.EventClass):
+    _event_types_ = [Event.End,
+                     Event.Start]
+    _fields_ = [('CallbackRoutine', field.Pointer)]
+
   class CompCS(event.EventClass):
     _event_types_ = [Event.CompCS]
     _fields_ = []
+
+  class AutoBoostEntryExhaustion(event.EventClass):
+    _event_types_ = [Event.AutoBoost Entry Exhaustion]
+    _fields_ = [('LockAddress', field.Pointer),
+                ('ThreadId', field.UInt32)]
 
   class ReadyThread(event.EventClass):
     _event_types_ = [Event.ReadyThread]
@@ -84,6 +160,13 @@ class Thread_V2(event.EventCategory):
                 ('AdjustIncrement', field.Int8),
                 ('Flag', field.Int8),
                 ('Reserved', field.Int8)]
+
+  class AntiStarvationBoost(event.EventClass):
+    _event_types_ = [Event.AntiStarvationBoost]
+    _fields_ = [('ThreadId', field.UInt32),
+                ('ProcessorIndex', field.UInt16),
+                ('Priority', field.UInt8),
+                ('Reserved', field.UInt8)]
 
   class TypeGroup1(event.EventClass):
     _event_types_ = [Event.DCEnd,
@@ -155,13 +238,13 @@ class Thread_V1(event.EventCategory):
   VERSION = 1
 
   class TypeGroup2(event.EventClass):
-    _event_types_ = [Event.DCEnd,
-                     Event.End]
+    _event_types_ = [Event.End]
     _fields_ = [('ProcessId', field.UInt32),
                 ('TThreadId', field.UInt32)]
 
   class TypeGroup1(event.EventClass):
-    _event_types_ = [Event.DCStart,
+    _event_types_ = [Event.DCEnd,
+                     Event.DCStart,
                      Event.Start]
     _fields_ = [('ProcessId', field.UInt32),
                 ('TThreadId', field.UInt32),
@@ -184,8 +267,7 @@ class Thread_V1(event.EventCategory):
                 ('OldThreadWaitReason', field.Int8),
                 ('OldThreadWaitMode', field.Int8),
                 ('OldThreadState', field.Int8),
-                ('OldThreadWaitIdealProcessor', field.Int8),
-                ('NewThreadWaitTime', field.UInt32)]
+                ('OldThreadWaitIdealProcessor', field.Int8)]
 
   class WorkerThread_V1(event.EventClass):
     _event_types_ = [Event.WorkerThread]

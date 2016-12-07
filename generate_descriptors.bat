@@ -11,7 +11,7 @@
 :: WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 :: See the License for the specific language governing permissions and
 :: limitations under the License.
-@echo off
+@echo on
 
 :: Image load events
 python generate_descriptor.py -g {2cb15d1d-5fc1-11d2-abe1-00a0c911f518} -o etw\descriptors

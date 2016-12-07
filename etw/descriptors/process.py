@@ -30,10 +30,30 @@ class Event(object):
   End = (GUID, 2)
   DCStart = (GUID, 3)
   DCEnd = (GUID, 4)
+  Terminate = (GUID, 11)
   PerfCtr = (GUID, 32)
   PerfCtrRundown = (GUID, 33)
   InSwap = (GUID, 35)
   Defunct = (GUID, 39)
+  WakeChargeUser = (GUID, 48)
+  WakeChargeExecution = (GUID, 49)
+  WakeChargeKernel = (GUID, 50)
+  WakeChargeInstrumentation = (GUID, 51)
+  WakeChargePreserveProcess = (GUID, 52)
+  WakeReleaseUser = (GUID, 64)
+  WakeReleaseExecution = (GUID, 65)
+  WakeReleaseKernel = (GUID, 66)
+  WakeReleaseInstrumentation = (GUID, 67)
+  WakeReleasePreserveProcess = (GUID, 68)
+  WakeDropUser = (GUID, 80)
+  WakeDropExecution = (GUID, 81)
+  WakeDropKernel = (GUID, 82)
+  WakeDropInstrumentation = (GUID, 83)
+  WakeDropPreserveProcess = (GUID, 84)
+  WakeEventUser = (GUID, 96)
+  WakeEventExecution = (GUID, 97)
+  WakeEventKernel = (GUID, 98)
+  WakeEventInstrumentation = (GUID, 99)
 
 
 class Process_V1(event.EventCategory):
@@ -71,28 +91,56 @@ class Process_V0(event.EventCategory):
 
 class Process(event.EventCategory):
   GUID = Event.GUID
-  VERSION = 3
+  VERSION = 5
 
-  class TypeGroup1(event.EventClass):
-    _event_types_ = [Event.DCEnd,
-                     Event.DCStart,
-                     Event.Defunct,
-                     Event.End,
-                     Event.Start]
+  class Defunct_TypeGroup1(event.EventClass):
+    _event_types_ = [Event.Defunct]
     _fields_ = [('UniqueProcessKey', field.Pointer),
                 ('ProcessId', field.UInt32),
                 ('ParentId', field.UInt32),
                 ('SessionId', field.UInt32),
                 ('ExitStatus', field.Int32),
                 ('DirectoryTableBase', field.Pointer),
+                ('Flags', field.UInt32),
                 ('UserSID', field.Sid),
                 ('ImageFileName', field.String),
-                ('CommandLine', field.WString)]
+                ('CommandLine', field.WString),
+                ('PackageFullName', field.WString),
+                ('ApplicationId', field.WString),
+                ('ExitTime', field.UInt64)]
 
 
 class Process_V2(event.EventCategory):
   GUID = Event.GUID
   VERSION = 2
+
+  class TypeGroup5(event.EventClass):
+    _event_types_ = [Event.WakeEventExecution,
+                     Event.WakeEventInstrumentation,
+                     Event.WakeEventKernel,
+                     Event.WakeEventUser]
+    _fields_ = [('Object', field.Pointer)]
+
+  class TypeGroup4(event.EventClass):
+    _event_types_ = [Event.WakeChargeExecution,
+                     Event.WakeChargeInstrumentation,
+                     Event.WakeChargeKernel,
+                     Event.WakeChargePreserveProcess,
+                     Event.WakeChargeUser,
+                     Event.WakeDropExecution,
+                     Event.WakeDropInstrumentation,
+                     Event.WakeDropKernel,
+                     Event.WakeDropPreserveProcess,
+                     Event.WakeDropUser,
+                     Event.WakeReleaseExecution,
+                     Event.WakeReleaseInstrumentation,
+                     Event.WakeReleaseKernel,
+                     Event.WakeReleasePreserveProcess,
+                     Event.WakeReleaseUser]
+    _fields_ = [('Object', field.Pointer),
+                ('Tag', field.Pointer),
+                ('ProcessId', field.UInt32),
+                ('Count', field.UInt32)]
 
   class TypeGroup2(event.EventClass):
     _event_types_ = [Event.PerfCtr,
@@ -128,7 +176,56 @@ class Process_V2(event.EventCategory):
                 ('ImageFileName', field.String),
                 ('CommandLine', field.WString)]
 
+  class Process_Terminate_TypeGroup1(event.EventClass):
+    _event_types_ = [Event.Terminate]
+    _fields_ = [('ProcessId', field.UInt32)]
+
   class TypeGroup3(event.EventClass):
     _event_types_ = [Event.InSwap]
     _fields_ = [('DirectoryTableBase', field.Pointer),
                 ('ProcessId', field.UInt32)]
+
+
+class Process_V4(event.EventCategory):
+  GUID = Event.GUID
+  VERSION = 4
+
+  class TypeGroup1(event.EventClass):
+    _event_types_ = [Event.DCEnd,
+                     Event.DCStart,
+                     Event.Defunct,
+                     Event.End,
+                     Event.Start]
+    _fields_ = [('UniqueProcessKey', field.Pointer),
+                ('ProcessId', field.UInt32),
+                ('ParentId', field.UInt32),
+                ('SessionId', field.UInt32),
+                ('ExitStatus', field.Int32),
+                ('DirectoryTableBase', field.Pointer),
+                ('Flags', field.UInt32),
+                ('UserSID', field.Sid),
+                ('ImageFileName', field.String),
+                ('CommandLine', field.WString),
+                ('PackageFullName', field.WString),
+                ('ApplicationId', field.WString)]
+
+
+class Process_V3(event.EventCategory):
+  GUID = Event.GUID
+  VERSION = 3
+
+  class TypeGroup1(event.EventClass):
+    _event_types_ = [Event.DCEnd,
+                     Event.DCStart,
+                     Event.Defunct,
+                     Event.End,
+                     Event.Start]
+    _fields_ = [('UniqueProcessKey', field.Pointer),
+                ('ProcessId', field.UInt32),
+                ('ParentId', field.UInt32),
+                ('SessionId', field.UInt32),
+                ('ExitStatus', field.Int32),
+                ('DirectoryTableBase', field.Pointer),
+                ('UserSID', field.Sid),
+                ('ImageFileName', field.String),
+                ('CommandLine', field.WString)]

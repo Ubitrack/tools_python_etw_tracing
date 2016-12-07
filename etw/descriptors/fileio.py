@@ -30,6 +30,10 @@ class Event(object):
   FileCreate = (GUID, 32)
   FileDelete = (GUID, 35)
   FileRundown = (GUID, 36)
+  MapFile = (GUID, 37)
+  UnmapFile = (GUID, 38)
+  MapFileDCStart = (GUID, 39)
+  MapFileDCEnd = (GUID, 40)
   Create = (GUID, 64)
   Cleanup = (GUID, 65)
   Close = (GUID, 66)
@@ -44,11 +48,58 @@ class Event(object):
   FSControl = (GUID, 75)
   OperationEnd = (GUID, 76)
   DirNotify = (GUID, 77)
+  DletePath = (GUID, 79)
+  RenamePath = (GUID, 80)
+  SetLinkPath = (GUID, 81)
+  PreOpInit = (GUID, 96)
+  PostOpInit = (GUID, 97)
+  PreOpCompletion = (GUID, 98)
+  PostOpCompletion = (GUID, 99)
+  PreOpFailure = (GUID, 100)
+  PostOpFailure = (GUID, 101)
 
 
-class FileIo(event.EventCategory):
+class FileIo_V2(event.EventCategory):
   GUID = Event.GUID
   VERSION = 2
+
+  class MapFile(event.EventClass):
+    _event_types_ = [Event.MapFile,
+                     Event.MapFileDCEnd,
+                     Event.MapFileDCStart,
+                     Event.UnmapFile]
+    _fields_ = [('ViewBase', field.Pointer),
+                ('FileObject', field.Pointer),
+                ('MiscInfo', field.UInt64),
+                ('ViewSize', field.Int32),
+                ('ProcessId', field.UInt32)]
+
+  class DirEnum(event.EventClass):
+    _event_types_ = [Event.DirEnum,
+                     Event.DirNotify]
+    _fields_ = [('IrpPtr', field.Pointer),
+                ('TTID', field.Pointer),
+                ('FileObject', field.Pointer),
+                ('FileKey', field.Pointer),
+                ('Length', field.UInt32),
+                ('InfoClass', field.UInt32),
+                ('FileIndex', field.UInt32),
+                ('FileName', field.WString)]
+
+  class OpEnd(event.EventClass):
+    _event_types_ = [Event.OperationEnd]
+    _fields_ = [('IrpPtr', field.Pointer),
+                ('ExtraInfo', field.Pointer),
+                ('NtStatus', field.UInt32)]
+
+  class SimpleOp(event.EventClass):
+    _event_types_ = [Event.Cleanup,
+                     Event.Close,
+                     Event.Flush]
+    _fields_ = [('IrpPtr', field.Pointer),
+                ('TTID', field.Pointer),
+                ('FileObject', field.Pointer),
+                ('FileKey', field.Pointer)]
 
   class ReadWrite(event.EventClass):
     _event_types_ = [Event.Read,
@@ -61,6 +112,27 @@ class FileIo(event.EventCategory):
                 ('IoSize', field.UInt32),
                 ('IoFlags', field.UInt32)]
 
+  class Info(event.EventClass):
+    _event_types_ = [Event.Delete,
+                     Event.FSControl,
+                     Event.QueryInfo,
+                     Event.Rename,
+                     Event.SetInfo]
+    _fields_ = [('IrpPtr', field.Pointer),
+                ('TTID', field.Pointer),
+                ('FileObject', field.Pointer),
+                ('FileKey', field.Pointer),
+                ('ExtraInfo', field.Pointer),
+                ('InfoClass', field.UInt32)]
+
+  class Name(event.EventClass):
+    _event_types_ = [Event.FileCreate,
+                     Event.FileDelete,
+                     Event.FileRundown,
+                     Event.Name]
+    _fields_ = [('FileObject', field.Pointer),
+                ('FileName', field.WString)]
+
   class Create(event.EventClass):
     _event_types_ = [Event.Create]
     _fields_ = [('IrpPtr', field.Pointer),
@@ -70,6 +142,53 @@ class FileIo(event.EventCategory):
                 ('FileAttributes', field.UInt32),
                 ('ShareAccess', field.UInt32),
                 ('OpenPath', field.WString)]
+
+
+class FileIo(event.EventCategory):
+  GUID = Event.GUID
+  VERSION = 3
+
+  class ReadWrite(event.EventClass):
+    _event_types_ = [Event.Read,
+                     Event.Write]
+    _fields_ = [('Offset', field.UInt64),
+                ('IrpPtr', field.Pointer),
+                ('FileObject', field.Pointer),
+                ('FileKey', field.Pointer),
+                ('TTID', field.UInt32),
+                ('IoSize', field.UInt32),
+                ('IoFlags', field.UInt32)]
+
+  class Create(event.EventClass):
+    _event_types_ = [Event.Create]
+    _fields_ = [('IrpPtr', field.Pointer),
+                ('FileObject', field.Pointer),
+                ('TTID', field.UInt32),
+                ('CreateOptions', field.UInt32),
+                ('FileAttributes', field.UInt32),
+                ('ShareAccess', field.UInt32),
+                ('OpenPath', field.WString)]
+
+  class FltIoInit(event.EventClass):
+    _event_types_ = [Event.PostOpInit,
+                     Event.PreOpInit]
+    _fields_ = [('RoutineAddr', field.Pointer),
+                ('FileObject', field.Pointer),
+                ('FileContext', field.Pointer),
+                ('IrpPtr', field.Pointer),
+                ('CallbackDataPtr', field.Pointer),
+                ('MajorFunction', field.UInt32)]
+
+  class FltIoFailure(event.EventClass):
+    _event_types_ = [Event.PostOpFailure,
+                     Event.PreOpFailure]
+    _fields_ = [('RoutineAddr', field.Pointer),
+                ('FileObject', field.Pointer),
+                ('FileContext', field.Pointer),
+                ('IrpPtr', field.Pointer),
+                ('CallbackDataPtr', field.Pointer),
+                ('MajorFunction', field.UInt32),
+                ('Status', field.UInt32)]
 
   class Name(event.EventClass):
     _event_types_ = [Event.FileCreate,
@@ -86,10 +205,10 @@ class FileIo(event.EventCategory):
                      Event.Rename,
                      Event.SetInfo]
     _fields_ = [('IrpPtr', field.Pointer),
-                ('TTID', field.Pointer),
                 ('FileObject', field.Pointer),
                 ('FileKey', field.Pointer),
                 ('ExtraInfo', field.Pointer),
+                ('TTID', field.UInt32),
                 ('InfoClass', field.UInt32)]
 
   class SimpleOp(event.EventClass):
@@ -97,20 +216,43 @@ class FileIo(event.EventCategory):
                      Event.Close,
                      Event.Flush]
     _fields_ = [('IrpPtr', field.Pointer),
-                ('TTID', field.Pointer),
                 ('FileObject', field.Pointer),
-                ('FileKey', field.Pointer)]
+                ('FileKey', field.Pointer),
+                ('TTID', field.UInt32)]
+
+  class FltIoCompletion(event.EventClass):
+    _event_types_ = [Event.PostOpCompletion,
+                     Event.PreOpCompletion]
+    _fields_ = [('InitialTime', field.WmiTime),
+                ('RoutineAddr', field.Pointer),
+                ('FileObject', field.Pointer),
+                ('FileContext', field.Pointer),
+                ('IrpPtr', field.Pointer),
+                ('CallbackDataPtr', field.Pointer),
+                ('MajorFunction', field.UInt32)]
 
   class DirEnum(event.EventClass):
     _event_types_ = [Event.DirEnum,
                      Event.DirNotify]
     _fields_ = [('IrpPtr', field.Pointer),
-                ('TTID', field.Pointer),
                 ('FileObject', field.Pointer),
                 ('FileKey', field.Pointer),
+                ('TTID', field.UInt32),
                 ('Length', field.UInt32),
                 ('InfoClass', field.UInt32),
                 ('FileIndex', field.UInt32),
+                ('FileName', field.WString)]
+
+  class PathOperation(event.EventClass):
+    _event_types_ = [Event.DletePath,
+                     Event.RenamePath,
+                     Event.SetLinkPath]
+    _fields_ = [('IrpPtr', field.Pointer),
+                ('FileObject', field.Pointer),
+                ('FileKey', field.Pointer),
+                ('ExtraInfo', field.Pointer),
+                ('TTID', field.UInt32),
+                ('InfoClass', field.UInt32),
                 ('FileName', field.WString)]
 
   class OpEnd(event.EventClass):

@@ -29,6 +29,13 @@ class Event(object):
   DispatchBegin = (GUID, 10)
   DispatchEnd = (GUID, 11)
   DispatchDiscard = (GUID, 12)
+  CreateMeasurement = (GUID, 13)
+  ReceiveMeasurement = (GUID, 14)
+  VisionGpuUpload = (GUID, 15)
+  VisionGpuDownload = (GUID, 16)
+  VisionAllocateGpu = (GUID, 17)
+  VisionAllocateCpu = (GUID, 18)
+
 
 
 class UTEventQueue(event.EventCategory):
@@ -55,4 +62,36 @@ class UTEventQueue(event.EventCategory):
     _fields_ = [('EventDomain', field.UInt32),
                 ('Priority', field.UInt64),
                 ('ComponentName', field.String),
-                ('PortName', field.String)]            
+                ('PortName', field.String)]
+
+  class CreateMeasurement(event.EventClass):
+    _event_types_ = [Event.CreateMeasurement]
+    _fields_ = [('EventDomain', field.UInt32),
+                ('Priority', field.UInt64),
+                ('ComponentName', field.String),
+                ('PortName', field.String),
+                ('Text', field.String)]
+
+  class ReceiveMeasurement(event.EventClass):
+    _event_types_ = [Event.ReceiveMeasurement]
+    _fields_ = [('EventDomain', field.UInt32),
+                ('Priority', field.UInt64),
+                ('ComponentName', field.String),
+                ('PortName', field.String),
+                ('Text', field.String)]
+
+  class VisionGpuUpload(event.EventClass):
+    _event_types_ = [Event.VisionGpuUpload]
+    _fields_ = [('Size', field.UInt64)]
+
+  class VisionGpuDownload(event.EventClass):
+    _event_types_ = [Event.VisionGpuDownload]
+    _fields_ = [('Size', field.UInt64)]
+
+  class VisionAllocateGpu(event.EventClass):
+    _event_types_ = [Event.VisionAllocateGpu]
+    _fields_ = [('Size', field.UInt64)]
+
+  class VisionAllocateCpu(event.EventClass):
+    _event_types_ = [Event.VisionAllocateCpu]
+    _fields_ = [('Size', field.UInt64)]

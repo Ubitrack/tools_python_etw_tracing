@@ -41,6 +41,10 @@ class Event(object):
   HRRelease = (GUID, 103)
   HRDestroy = (GUID, 104)
   ImageLoadBacked = (GUID, 105)
+  VirtualRotate = (GUID, 127)
+  VirtualAllocDCStart = (GUID, 128)
+  VirtualAllocDCEnd = (GUID, 129)
+  MemResetInfo = (GUID, 134)
 
 
 class PageFault_V2(event.EventCategory):
@@ -56,12 +60,27 @@ class PageFault_V2(event.EventCategory):
                 ('TThreadId', field.UInt32),
                 ('ByteCount', field.UInt32)]
 
+  class PageFault_VirtualAllocRundown(event.EventClass):
+    _event_types_ = [Event.VirtualAllocDCEnd,
+                     Event.VirtualAllocDCStart]
+    _fields_ = [('BaseAddress', field.Pointer),
+                ('RegionSize', field.Int32),
+                ('ProcessId', field.UInt32),
+                ('Flags', field.UInt32),
+                ('CommitSizeInBytes', field.Int32)]
+
   class PageFault_VirtualAlloc(event.EventClass):
     _event_types_ = [Event.VirtualAlloc,
                      Event.VirtualFree]
     _fields_ = [('BaseAddress', field.Pointer),
                 ('RegionSize', field.Int32),
                 ('ProcessId', field.UInt32),
+                ('Flags', field.UInt32)]
+
+  class PageFault_MemReset(event.EventClass):
+    _event_types_ = [Event.MemResetInfo]
+    _fields_ = [('BaseAddress', field.Pointer),
+                ('SizeInBytes', field.Int32),
                 ('Flags', field.UInt32)]
 
   class PageFault_HeapRangeRundown_V2(event.EventClass):
@@ -104,6 +123,12 @@ class PageFault_V2(event.EventCategory):
     _fields_ = [('HeapHandle', field.Pointer),
                 ('FirstRangeSize', field.Int32),
                 ('HRCreateFlags', field.UInt32)]
+
+  class PageFault_VirtualRotate(event.EventClass):
+    _event_types_ = [Event.VirtualRotate]
+    _fields_ = [('BaseAddress', field.Pointer),
+                ('SizeInBytes', field.Int32),
+                ('Flags', field.UInt32)]
 
 
 class PageFault(event.EventCategory):

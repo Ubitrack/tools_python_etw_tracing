@@ -51,15 +51,33 @@ class Event(object):
   TxRRollback = (GUID, 32)
   Counters = (GUID, 34)
   Config = (GUID, 35)
+  HiveInit = (GUID, 36)
+  HiveDestroy = (GUID, 37)
+  HiveLink = (GUID, 38)
+  HiveDCEnd = (GUID, 39)
+  HiveDirty = (GUID, 40)
+  ChangeNotify = (GUID, 48)
 
 
 class Registry(event.EventCategory):
   GUID = Event.GUID
   VERSION = 2
 
+  class HiveDirty(event.EventClass):
+    _event_types_ = [Event.HiveDirty]
+    _fields_ = [('Hive', field.Pointer),
+                ('LinkPath', field.WString),
+                ('DirtyReason', field.UInt32)]
+
   class Config(event.EventClass):
     _event_types_ = [Event.Config]
     _fields_ = [('CurrentControlSet', field.UInt32)]
+
+  class HiveDestroy(event.EventClass):
+    _event_types_ = [Event.HiveDestroy]
+    _fields_ = [('Hive', field.Pointer),
+                ('FileName', field.WString),
+                ('Path', field.WString)]
 
   class Counters(event.EventClass):
     _event_types_ = [Event.Counters]
@@ -102,15 +120,44 @@ class Registry(event.EventCategory):
                 ('KeyHandle', field.Pointer),
                 ('KeyName', field.WString)]
 
+  class HiveInitialize(event.EventClass):
+    _event_types_ = [Event.HiveInit]
+    _fields_ = [('Hive', field.Pointer),
+                ('OperationType', field.UInt32),
+                ('PoolTag', field.UInt32),
+                ('Size', field.UInt32),
+                ('FileName', field.WString)]
+
   class TxR(event.EventClass):
     _event_types_ = [Event.TxRCommit,
                      Event.TxRPrepare,
                      Event.TxRRollback]
-    _fields_ = [('TxrGUID', field.UInt8),
+    _fields_ = [('TxrGUID', field.Int64),
                 ('Status', field.UInt32),
                 ('UowCount', field.UInt32),
                 ('OperationTime', field.UInt64),
                 ('Hive', field.WString)]
+
+  class HiveRundown(event.EventClass):
+    _event_types_ = [Event.HiveDCEnd]
+    _fields_ = [('Size', field.UInt64),
+                ('Hive', field.Pointer),
+                ('LoadedKeyCount', field.UInt32),
+                ('FileName', field.WString),
+                ('LinkPath', field.WString)]
+
+  class ChangeNotification(event.EventClass):
+    _event_types_ = [Event.ChangeNotify]
+    _fields_ = [('Notification', field.Pointer),
+                ('KeyHandle', field.Pointer),
+                ('Type', field.UInt8),
+                ('WatchSubtree', field.UInt8),
+                ('Primary', field.UInt8)]
+
+  class HiveLink(event.EventClass):
+    _event_types_ = [Event.HiveLink]
+    _fields_ = [('Hive', field.Pointer),
+                ('Path', field.WString)]
 
 
 class Registry_V0(event.EventCategory):
